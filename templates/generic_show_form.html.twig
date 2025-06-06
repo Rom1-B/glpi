@@ -105,6 +105,7 @@
                            __('Status'),
                            field_options|merge({
                               'entity': item.fields['entities_id'],
+                              'entity_sons': item.fields['is_recursive'],
                               'condition': condition
                            })
                         ) }}
@@ -119,6 +120,7 @@
                            __('As child of'),
                            field_options|merge({
                               'entity': item.fields['entities_id'],
+                              'entity_sons': item.fields['is_recursive'],
                            })
                         ) }}
                      {% endif %}
@@ -160,6 +162,7 @@
                            'Location'|itemtype_name,
                            field_options|merge({
                               'entity': item.fields['entities_id'],
+                              'entity_sons': item.fields['is_recursive'],
                            })
                         ) }}
                      {% endif %}
@@ -200,6 +203,7 @@
                            'UserTitle'|itemtype_name,
                            field_options|merge({
                               'entity': item.fields['entities_id'],
+                              'entity_sons': item.fields['is_recursive'],
                            })
                         ) }}
                      {% endif %}
@@ -376,6 +380,7 @@
                            __('Technician in charge'),
                            field_options|merge({
                               'entity': item.fields['entities_id'],
+                              'entity_sons': item.fields['is_recursive'],
                               'right': 'own_ticket',
                            })
                         ) }}
@@ -399,6 +404,7 @@
                            __('Group in charge'),
                            field_options|merge({
                               'entity': item.fields['entities_id'],
+                              'entity_sons': item.fields['is_recursive'],
                               'condition': {'is_assign': 1},
                            })
                         ) }}
@@ -477,6 +483,7 @@
                            'User'|itemtype_name,
                            field_options|merge({
                               'entity': item.fields['entities_id'],
+                              'entity_sons': item.fields['is_recursive'],
                               'right': 'all',
                            })
                         ) }}
@@ -541,6 +548,7 @@
                            'Group'|itemtype_name,
                            field_options|merge({
                               'entity': item.fields['entities_id'],
+                              'entity_sons': item.fields['is_recursive'],
                               'condition': {'is_itemgroup': 1},
                            })
                         ) }}
