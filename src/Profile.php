@@ -3412,7 +3412,7 @@ class Profile extends CommonDBTM implements LinkableToTilesInterface
 
         if (isset($PLUGIN_HOOKS[Hooks::ASSIGN_TO_TICKET])) {
             $plugin_types = [];
-            foreach (array_keys($PLUGIN_HOOKS[Hooks::ASSIGN_TO_TICKET]) as $plugin) {
+            foreach ($PLUGIN_HOOKS[Hooks::ASSIGN_TO_TICKET] as $plugin => $value) {
                 if (!Plugin::isPluginActive($plugin)) {
                     continue;
                 }
