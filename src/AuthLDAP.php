@@ -466,6 +466,7 @@ class AuthLDAP extends CommonDBTM
                     $ma->addMessage($item->getErrorMessage(ERROR_RIGHT));
                     return;
                 }
+                User::enableLdapGroupBatchMode();
                 foreach ($ids as $id) {
                     if (
                         self::ldapImportUserByServerId(
