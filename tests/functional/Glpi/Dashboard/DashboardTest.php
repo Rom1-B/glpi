@@ -35,6 +35,7 @@
 namespace tests\units\Glpi\Dashboard;
 
 use Glpi\Dashboard\Dashboard;
+use Glpi\Dashboard\Grid;
 use Glpi\Dashboard\Item;
 use Glpi\Dashboard\Right;
 use Glpi\Tests\DbTestCase;
@@ -377,5 +378,58 @@ class DashboardTest extends DbTestCase
         $dashboard_as_shared = new Dashboard('test_view_current_shared');
         $this->assertTrue($dashboard_as_shared->canViewCurrent());
         $this->assertFalse($dashboard_as_shared->canUpdateCurrent());
+    }
+
+    public function testCanViewCurrentForHelpdeskUser(): void
+    {
+        // System mini_core dashboards (users_id = 0) must be accessible to helpdesk
+        // users who have at least one ticket read right, without requiring the dashboard right.
+        $this->login('jsmith123');
+        $_SESSION['glpiactiveprofile']['interface'] = 'helpdesk';
+        $_SESSION['glpiactiveprofile']['dashboard'] = 0;
+        $_SESSION['glpiactiveprofile']['ticket'] = \Ticket::READMY;
+
+        $mini_dashboard = new Dashboard('mini_tickets');
+        $this->assertTrue($mini_dashboard->canViewCurrent());
+
+        // The full resolution path (used by Grid::show) must also resolve to 'mini_tickets'.
+        $this->assertEquals('mini_tickets', Grid::getDefaultDashboardForMenu('mini_ticket', true));
+
+        // A mini_core dashboard owned by another user must NOT be accessible.
+        $this->login();
+        $owner_id = (int) \Session::getLoginUserID();
+        $this->createItem(Dashboard::class, [
+            'key'      => 'test_private_mini_core',
+            'name'     => __FUNCTION__,
+            'users_id' => $owner_id,
+            'context'  => 'mini_core',
+        ]);
+
+        $this->login('jsmith123');
+        $_SESSION['glpiactiveprofile']['interface'] = 'helpdesk';
+        $_SESSION['glpiactiveprofile']['dashboard'] = 0;
+        $_SESSION['glpiactiveprofile']['ticket'] = \Ticket::READMY;
+
+        $private_mini = new Dashboard('test_private_mini_core');
+        $this->assertFalse($private_mini->canViewCurrent());
+
+        // A helpdesk user with no ticket rights must NOT be able to view the system mini-dashboard.
+        $this->login('jsmith123');
+        $_SESSION['glpiactiveprofile']['interface'] = 'helpdesk';
+        $_SESSION['glpiactiveprofile']['dashboard'] = 0;
+        $_SESSION['glpiactiveprofile']['ticket'] = 0;
+
+        $no_rights_mini = new Dashboard('mini_tickets');
+        $this->assertFalse($no_rights_mini->canViewCurrent());
+
+        // mini_core dashboards must not make the "Dashboard" home tab appear
+        // (canViewOneDashboard('core') excludes mini_core context).
+        $this->login('jsmith123');
+        $_SESSION['glpiactiveprofile']['interface'] = 'helpdesk';
+        $_SESSION['glpiactiveprofile']['dashboard'] = 0;
+        $_SESSION['glpiactiveprofile']['ticket'] = \Ticket::READMY;
+
+        Grid::$all_dashboards = [];
+        $this->assertFalse(Grid::canViewOneDashboard('core'));
     }
 }

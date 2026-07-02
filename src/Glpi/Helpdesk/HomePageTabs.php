@@ -103,7 +103,7 @@ final class HomePageTabs extends CommonGLPI
             );
         }
 
-        if (Grid::canViewOneDashboard()) {
+        if (Grid::canViewOneDashboard('core')) {
             $tabs[self::DASHBOARD_TAB] = self::createTabEntry(
                 text: __("Dashboard"),
                 icon: Dashboard::getIcon()

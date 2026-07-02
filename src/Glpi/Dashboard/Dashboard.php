@@ -43,6 +43,7 @@ use Glpi\Plugin\Hooks;
 use Plugin;
 use Ramsey\Uuid\Uuid;
 use Session;
+use Ticket;
 use Toolbox;
 
 use function Safe\json_decode;
@@ -233,6 +234,17 @@ class Dashboard extends CommonDBTM
 
         // check global (admin) right
         if (self::canView() && !$this->isPrivate()) {
+            Profiler::getInstance()->stop(__METHOD__);
+            return true;
+        }
+
+        // System mini-dashboard: allow helpdesk users with any ticket read right.
+        if (
+            $this->fields['context'] === 'mini_core'
+            && (int) $this->fields['users_id'] === 0
+            && Session::getCurrentInterface() === 'helpdesk'
+            && Session::haveRightsOr(Ticket::$rightname, [Ticket::READALL, Ticket::READMY, Ticket::READASSIGN, Ticket::OWN])
+        ) {
             Profiler::getInstance()->stop(__METHOD__);
             return true;
         }

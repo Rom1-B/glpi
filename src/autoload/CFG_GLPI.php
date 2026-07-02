@@ -594,6 +594,9 @@ $CFG_GLPI['javascript'] = [
         'change'    => ['sortable', 'rateit'],
         'stat'      => ['charts', 'rateit'],
     ],
+    'tickets'   => [
+        'ticket' => ['rateit', 'dashboard'],
+    ],
     'tools'     => [
         'project'                 => ['sortable'],
         'knowbaseitem'            => ['kb'],
