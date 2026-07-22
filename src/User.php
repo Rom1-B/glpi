@@ -3845,6 +3845,14 @@ HTML;
             'nosort'            => true, // Same as above
         ];
 
+        $tab[] = [
+            'id'                => 133,
+            'table'             => 'glpi_users',
+            'field'             => 'notification_to_myself',
+            'name'              => __('Notifications to myself'),
+            'datatype'          => 'bool',
+        ];
+
         // add objectlock search options
         $tab = array_merge($tab, ObjectLock::rawSearchOptionsToAdd(get_class($this)));
 
