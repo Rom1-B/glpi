@@ -902,6 +902,51 @@ class AuthLdapTest extends DbTestCase
     }
 
     /**
+     * `AuthLDAP::processMassiveActionsForOneItemtype()` must resolve `mode` and `authldaps_id`
+     * from the massive action input (`$ma->getInput()`), not from the `$_REQUEST` superglobal,
+     * which is not populated when the action is replayed from `$_SESSION` (see MassiveAction's
+     * "process" stage reload) and triggers "Undefined array key" warnings for every processed
+     * item otherwise.
+     */
+    public function testProcessMassiveActionsForOneItemtypeSyncIgnoresRequest()
+    {
+        $this->login();
+
+        $ldap = $this->ldap;
+
+        // Pollute the request with values that must NOT be used, to prove the massive
+        // action input is used instead.
+        $_REQUEST['mode'] = 999;
+        $_REQUEST['authldaps_id'] = 0;
+
+        $ma = $this->getMockBuilder(\MassiveAction::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getAction', 'addMessage', 'getInput', 'itemDone'])
+            ->getMock();
+        $ma->method('getAction')->willReturn('sync');
+        $ma->method('addMessage')->willReturn(null);
+        $ma->method('getInput')->willReturn([
+            'mode'         => AuthLDAP::ACTION_IMPORT,
+            'authldaps_id' => $ldap->getID(),
+        ]);
+
+        $results = [];
+        $ma->method('itemDone')->willReturnCallback(function ($itemtype, $ids, $result) use (&$results) {
+            $results[] = $result;
+        });
+
+        AuthLDAP::processMassiveActionsForOneItemtype($ma, new AuthLDAP(), ['ecuador0']);
+
+        unset($_REQUEST['mode'], $_REQUEST['authldaps_id']);
+
+        $this->assertCount(1, $results);
+
+        $user = new \User();
+        $this->assertTrue($user->getFromDBbyName('ecuador0'));
+        $this->assertSame($ldap->getID(), $user->fields['auths_id']);
+    }
+
+    /**
      * Test get groups
      *
      * @return void
