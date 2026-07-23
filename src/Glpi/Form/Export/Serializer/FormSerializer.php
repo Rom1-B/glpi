@@ -733,17 +733,14 @@ final class FormSerializer extends AbstractFormSerializer
                 is_array($value)
                 && isset($value['itemtype'])
                 && isset($value['items_id'])
+                && ($value['items_id'] !== 0)
                 && getItemForItemtype($value['itemtype'])
             ) {
-                if (is_string($value['items_id'])) {
-                    $items_id = $mapper->getItemId(
-                        itemtype: $value['itemtype'],
-                        key: $value['items_id'],
-                    );
-                    $value['items_id'] = $items_id;
-                } else {
-                    $value['items_id'] = (int) $value['items_id'];
-                }
+                $items_id = $mapper->getItemId(
+                    itemtype: $value['itemtype'],
+                    key: $value['items_id'],
+                );
+                $value['items_id'] = $items_id;
             }
 
             $data[] = new ConditionData(
