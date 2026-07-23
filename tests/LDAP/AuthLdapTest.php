@@ -2421,6 +2421,55 @@ class AuthLdapTest extends DbTestCase
 
 
     /**
+     * Non-regression: reapplyRightRules() must preserve LDAP-attribute-based dynamic rights on Auth::EXTERNAL.
+     */
+    #[RequiresPhpExtension('ldap')]
+    public function testReapplyRightRulesPreservesLdapAttributeRuleOnExternalAuth(): void
+    {
+        $rule_builder = new RuleBuilder(__FUNCTION__, RuleRight::class);
+        $rule_builder->setEntity(0)
+            ->setIsRecursive(1)
+            ->addCriteria('employeenumber', \Rule::PATTERN_IS, 8)
+            ->addAction('assign', 'profiles_id', 5) // 'normal' profile
+            ->addAction('assign', 'entities_id', 1); // '_test_child_1' entity
+        $this->createRule($rule_builder);
+
+        // Real LDAP sync: assigns the dynamic profile/entity and records auths_id/user_dn.
+        $this->realLogin('brazil6', 'password', false);
+        $users_id = \User::getIdByName('brazil6');
+        $this->assertGreaterThan(0, $users_id);
+
+        $user = new \User();
+        $this->assertTrue($user->getFromDB($users_id));
+        $this->assertNotEmpty($user->fields['auths_id']);
+        $this->assertNotEmpty($user->fields['user_dn']);
+
+        // Simulate the SSO/OAuth login context: the plugin authenticates the
+        // user as Auth::EXTERNAL and calls reapplyRightRules() on the already
+        // LDAP-synced User object.
+        $user->fields['authtype'] = \Auth::EXTERNAL;
+        $user->reapplyRightRules();
+
+        $pu = Profile_User::getForUser($users_id, true);
+        $found = false;
+        foreach ($pu as $right) {
+            if (
+                isset($right['entities_id']) && $right['entities_id'] == 1
+                && isset($right['profiles_id']) && $right['profiles_id'] == 5
+                && isset($right['is_dynamic']) && $right['is_dynamic'] == 1
+            ) {
+                $found = true;
+                break;
+            }
+        }
+        $this->assertTrue(
+            $found,
+            'Dynamic right based on a LDAP attribute criterion was purged on Auth::EXTERNAL reapplyRightRules()'
+        );
+    }
+
+
+    /**
      * Test if rules targeting ldap criteria are working
      *
      * @return void
