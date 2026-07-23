@@ -115,6 +115,23 @@ abstract class AbstractFilter
     }
 
     /**
+     * @return list<int>
+     */
+    protected static function normalizeIntValues(mixed $value): array
+    {
+        $values = is_array($value) ? $value : [$value];
+
+        $ids = [];
+        foreach ($values as $v) {
+            if ((int) $v > 0) {
+                $ids[] = (int) $v;
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
      * Get generic HTML for a filter
      *
      * @param string $id system name of the filter (ex "dates")
